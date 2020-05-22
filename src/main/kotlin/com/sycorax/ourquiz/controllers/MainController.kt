@@ -9,4 +9,16 @@ class MainController {
     fun greeting(@RequestParam(value = "name", defaultValue = "World") name: String): String {
         return "Hello " + name;
     }
+
+    @GetMapping("/join")
+    fun join(@RequestParam(value = "quizId") quizId: String): String {
+        if (quizExists(quizId)) {
+            return "OK"
+        }
+        return "NO"
+    }
+
+    private fun quizExists(@RequestParam(value = "quizId") quizId: String): Boolean {
+       return quizId == "existing-quiz-id"
+    }
 }
