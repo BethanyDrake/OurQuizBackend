@@ -21,10 +21,33 @@ class MainControllerTests {
         Assertions.assertEquals("NO", result)
 	}
 
-     @Test
+    @Test
 	fun joinReturnsOkIfQuizDoesExist() {
         var controller = MainController()
         var result = controller.join("existing-quiz-id")
+        Assertions.assertEquals("OK", result)
+	}
+
+    @Test
+    fun createReturnsOkIfQuizDoesNotExist() {
+        var controller = MainController()
+        var result = controller.create("non-existing-quiz-id")
+        Assertions.assertEquals("OK", result)
+	}
+
+    @Test
+    fun createReturnsNoIfQuizDoesExist() {
+        var controller = MainController()
+        var result = controller.create("existing-quiz-id")
+        Assertions.assertEquals("NO", result)
+	}
+
+     @Test
+    fun canJoinAQuizAfterCreatingId() {
+        var controller = MainController()
+        var newQuizId = "new-quiz-id"
+        controller.create(newQuizId)
+        var result = controller.join(newQuizId)
         Assertions.assertEquals("OK", result)
 	}
 
