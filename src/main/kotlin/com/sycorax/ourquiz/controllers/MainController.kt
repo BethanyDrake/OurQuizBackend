@@ -23,15 +23,30 @@ class MainController {
         return "OK"
     }
 
+
+
+
+    @GetMapping("/listParticipants")
+    fun listParticipants(@RequestParam(value = "quizId") quizId: String): String {
+        return participants[quizId].toString()
+    }
+
+    var participants = hashMapOf<String, MutableList<String>>()
+
     @GetMapping("/join")
-    fun join(@RequestParam(value = "quizId") quizId: String): String {
+    fun join(@RequestParam(value = "quizId") quizId: String,  @RequestParam(value = "name") name: String): String {
         if (quizExists(quizId)) {
+            if (!participants.containsKey(quizId)) {
+                participants[quizId] = mutableListOf<String>()
+            }
+            participants[quizId]?.add(name)
+
             return "OK"
         }
         return "NO"
     }
 
-    private fun quizExists(@RequestParam(value = "quizId") quizId: String): Boolean {
+    private fun quizExists(quizId: String): Boolean {
        return existingQuizes.contains(quizId)
     }
 }

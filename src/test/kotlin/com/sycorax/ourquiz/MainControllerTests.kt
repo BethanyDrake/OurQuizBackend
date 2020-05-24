@@ -17,14 +17,14 @@ class MainControllerTests {
     @Test
 	fun joinReturnsNoIfQuizDoesNotExist() {
         var controller = MainController()
-        var result = controller.join("non-existing-quiz-id")
+        var result = controller.join("non-existing-quiz-id", "")
         Assertions.assertEquals("NO", result)
 	}
 
     @Test
 	fun joinReturnsOkIfQuizDoesExist() {
         var controller = MainController()
-        var result = controller.join("existing-quiz-id")
+        var result = controller.join("existing-quiz-id", "")
         Assertions.assertEquals("OK", result)
 	}
 
@@ -47,8 +47,20 @@ class MainControllerTests {
         var controller = MainController()
         var newQuizId = "new-quiz-id"
         controller.create(newQuizId)
-        var result = controller.join(newQuizId)
+        var result = controller.join(newQuizId, "")
         Assertions.assertEquals("OK", result)
+	}
+
+    @Test
+    fun listAllJoinedParticipants() {
+        var controller = MainController()
+        var newQuizId = "a-quiz"
+        controller.create(newQuizId)
+        controller.join(newQuizId, "person1")
+        controller.join(newQuizId, "person2")
+        var resultingList = controller.listParticipants(newQuizId)
+        var expectedResult = "[person1, person2]"
+        Assertions.assertEquals(expectedResult, resultingList)
 	}
 
 }
