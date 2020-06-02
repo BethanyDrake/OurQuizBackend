@@ -1,8 +1,9 @@
 package com.sycorax.ourquiz
 
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*
+import java.io.Console
+
+
 @RestController
 class MainController {
 
@@ -23,6 +24,12 @@ class MainController {
         return "OK"
     }
 
+    @PutMapping("/submit")
+    fun submit(@RequestBody body: String): String {
+        println("question submitted")
+        println("details: " + body)
+        return "OK"
+    }
 
 
 
