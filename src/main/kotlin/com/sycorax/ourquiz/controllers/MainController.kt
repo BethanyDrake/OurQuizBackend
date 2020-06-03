@@ -1,8 +1,9 @@
 package com.sycorax.ourquiz
 
+import com.beust.klaxon.Klaxon
 import org.springframework.web.bind.annotation.*
-import java.io.Console
 
+class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
 
 @RestController
 class MainController {
@@ -24,10 +25,18 @@ class MainController {
         return "OK"
     }
 
+    data class SubmissionBody(val quizId: String, val playerName: String)
+
     @PutMapping("/submit")
     fun submit(@RequestBody body: String): String {
-        println("question submitted")
-        println("details: " + body)
+
+        val parsedBody = Klaxon()
+                .parse<SubmissionBody>(body)
+
+        val quizParticipants = participants[parsedBody?.quizId];
+        val player:Player? = quizParticipants?.filter {it.name ==(parsedBody?.playerName)}?.firstOrNull()
+        player?.hasSubmittedQuestion = true
+
         return "OK"
     }
 
@@ -35,18 +44,23 @@ class MainController {
 
     @GetMapping("/listParticipants")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String): String {
-        return participants[quizId].toString()
+        return participants[quizId]?.map { it.name }.toString()
     }
 
-    var participants = hashMapOf<String, MutableList<String>>()
+    @GetMapping("/listParticipantsWho")
+    fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "hasSubmittedQuestion") hasSubmittedQuestion: Boolean): String {
+        return participants[quizId]?.filter { it.hasSubmittedQuestion == hasSubmittedQuestion }?.map { it.name }.toString()
+    }
+
+    var participants = hashMapOf<String, MutableList<Player>>()
 
     @GetMapping("/join")
     fun join(@RequestParam(value = "quizId") quizId: String,  @RequestParam(value = "name") name: String): String {
         if (quizExists(quizId)) {
             if (!participants.containsKey(quizId)) {
-                participants[quizId] = mutableListOf<String>()
+                participants[quizId] = mutableListOf<Player>()
             }
-            participants[quizId]?.add(name)
+            participants[quizId]?.add(Player(name))
 
             return "OK"
         }

@@ -63,4 +63,61 @@ class MainControllerTests {
         Assertions.assertEquals(expectedResult, resultingList)
 	}
 
+    @Test
+    fun submitWithQuizId() {
+        var controller = MainController()
+
+        val result = submitQuestion(controller, "id123", "");
+
+        Assertions.assertEquals("OK", result)
+    }
+
+    fun submitQuestion(controller: MainController, quizId:String, playerName:String): String{
+        val body = "{" +
+                "\"quizId\":\"${quizId}\"" +
+                "\"playerName\":\"${playerName}\"" +
+                "}"
+
+        return controller.submit(body);
+    }
+
+    fun createQuizWithPlayers(controller: MainController, quizId: String, players: List<String>) {
+        controller.create(quizId)
+        players.forEach {controller.join(quizId, it)  }
+    }
+
+    @Test
+    fun listUsersWhoHaveSubmittedAQuestion() {
+        var controller = MainController()
+        var quizId = "a-quiz"
+        createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
+
+
+        submitQuestion(controller, quizId, "person1");
+        submitQuestion(controller, quizId, "person3");
+
+
+        var expectedPlayersWithQuestion = listOf("person1", "person3")
+        var playersWithQuestionResult = controller.listParticipants(quizId, true);
+
+        Assertions.assertEquals(expectedPlayersWithQuestion.toString(), playersWithQuestionResult)
+    }
+
+
+    @Test
+    fun listUsersWhoHaveNotSubmittedAQuestion() {
+        var controller = MainController()
+        var quizId = "a-quiz"
+        createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
+
+
+        submitQuestion(controller, quizId, "person1");
+        submitQuestion(controller, quizId, "person3");
+
+        var expectedPlayersWithoutQuestion = listOf("person2", "person4")
+        var playersWithoutQuestionResult = controller.listParticipants(quizId, false);
+
+        Assertions.assertEquals(expectedPlayersWithoutQuestion.toString(), playersWithoutQuestionResult)
+    }
+
 }
