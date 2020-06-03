@@ -35,6 +35,10 @@ class MainController {
 
         val quizParticipants = participants[parsedBody?.quizId];
         val player:Player? = quizParticipants?.filter {it.name ==(parsedBody?.playerName)}?.firstOrNull()
+
+        if (player == null) {
+           return "NO"
+        }
         player?.hasSubmittedQuestion = true
 
         return "OK"

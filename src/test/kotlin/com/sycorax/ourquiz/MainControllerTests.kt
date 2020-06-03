@@ -64,12 +64,34 @@ class MainControllerTests {
 	}
 
     @Test
-    fun submitWithQuizId() {
+    fun submitAValidQuestion() {
+        var controller = MainController()
+        val quizId = "id123"
+        val playerName = "player1"
+        createQuizWithPlayers(controller, quizId, listOf(playerName) )
+        val result = submitQuestion(controller, quizId, playerName);
+
+        Assertions.assertEquals("OK", result)
+    }
+
+    @Test
+    fun submitQuestionToQuizThatDoesNotEquist() {
         var controller = MainController()
 
         val result = submitQuestion(controller, "id123", "");
 
-        Assertions.assertEquals("OK", result)
+        Assertions.assertEquals("NO", result)
+    }
+
+    @Test
+    fun submitQuestionToQuizThatDoesNotHaveThatPlayer() {
+        var controller = MainController()
+        createQuizWithPlayers(controller, "quiz1", listOf("player1"))
+        createQuizWithPlayers(controller, "quiz2", listOf("player2"))
+
+        val result = submitQuestion(controller, "quiz1", "player2");
+
+        Assertions.assertEquals("NO", result)
     }
 
     fun submitQuestion(controller: MainController, quizId:String, playerName:String): String{
