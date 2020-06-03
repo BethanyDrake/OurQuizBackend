@@ -1,5 +1,6 @@
 package com.sycorax.ourquiz
 
+import com.sun.org.apache.xpath.internal.operations.Bool
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.junit.jupiter.api.Assertions;
@@ -140,6 +141,28 @@ class MainControllerTests {
         var playersWithoutQuestionResult = controller.listParticipants(quizId, false);
 
         Assertions.assertEquals(expectedPlayersWithoutQuestion.toString(), playersWithoutQuestionResult)
+    }
+
+
+    @Test
+    fun beforeTheQuizHasBeenStarted() {
+        var controller = MainController()
+        var quizId = "a-quiz"
+        controller.create(quizId)
+
+        Assertions.assertEquals("false", controller.hasStarted(quizId))
+    }
+
+    @Test
+    fun afterTheQuizHasBeenStarted() {
+        var controller = MainController()
+        var quizId = "a-quiz"
+        controller.create(quizId)
+
+        controller.start(quizId)
+
+
+        Assertions.assertEquals("true", controller.hasStarted(quizId))
     }
 
 }

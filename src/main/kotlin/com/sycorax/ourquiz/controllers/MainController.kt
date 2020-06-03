@@ -4,11 +4,13 @@ import com.beust.klaxon.Klaxon
 import org.springframework.web.bind.annotation.*
 
 class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
+class Quiz(val id: String, var hasStarted: Boolean = false)
 
 @RestController
 class MainController {
 
-    val existingQuizes = mutableListOf<String>("existing-quiz-id");
+    val existingQuizes = mutableListOf(Quiz("existing-quiz-id"));
+
 
 
     @GetMapping("/hello")
@@ -21,14 +23,26 @@ class MainController {
         if (quizExists(quizId)) {
             return "NO"
         }
-        existingQuizes.add(quizId)
+        existingQuizes.add(Quiz(quizId))
         return "OK"
+    }
+
+    @PutMapping("/start")
+    fun start(@RequestParam(value = "quizId") quizId: String):String {
+        existingQuizes.first { it.id == quizId }.hasStarted = true
+        return "OK"
+    }
+
+    @GetMapping("/hasStarted")
+    fun hasStarted(@RequestParam(value = "quizId") quizId: String): String {
+        return existingQuizes.first { it.id == quizId }.hasStarted.toString()
     }
 
     data class SubmissionBody(val quizId: String, val playerName: String)
 
     @PutMapping("/submit")
     fun submit(@RequestBody body: String): String {
+        //println("submittedQuestion: "+ body)
 
         val parsedBody = Klaxon()
                 .parse<SubmissionBody>(body)
@@ -72,6 +86,8 @@ class MainController {
     }
 
     private fun quizExists(quizId: String): Boolean {
-       return existingQuizes.contains(quizId)
+       return existingQuizes.any {
+           it.id == quizId
+       }
     }
 }
