@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*
 
 class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
 class Quiz(val id: String, var hasStarted: Boolean = false)
+data class Question(val questionText:String)
 
 @RestController
 class MainController {
@@ -63,6 +64,11 @@ class MainController {
     @GetMapping("/listParticipants")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String): String {
         return participants[quizId]?.map { it.name }.toString()
+    }
+
+    @GetMapping("/currentQuestion")
+    fun currentQuestion(@RequestParam(value = "quizId") quizId: String): String {
+        return Klaxon().toJsonString(Question("some question text"))
     }
 
     @GetMapping("/listParticipantsWho")

@@ -1,5 +1,6 @@
 package com.sycorax.ourquiz
 
+import com.beust.klaxon.Klaxon
 import com.sun.org.apache.xpath.internal.operations.Bool
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -163,6 +164,20 @@ class MainControllerTests {
 
 
         Assertions.assertEquals("true", controller.hasStarted(quizId))
+    }
+
+    @Test
+    fun currentQuestionReturnsAValidQuestion() {
+        var controller = MainController()
+        var quizId = "a-quiz"
+
+
+
+
+        val result = Klaxon()
+                .parse<Question>(controller.currentQuestion(quizId))
+
+        Assertions.assertNotNull(result?.questionText)
     }
 
 }
