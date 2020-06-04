@@ -67,7 +67,7 @@ class MainControllerTests {
 
     @Test
     fun submitAValidQuestion() {
-        var controller = MainController()
+        val controller = MainController()
         val quizId = "id123"
         val playerName = "player1"
         createQuizWithPlayers(controller, quizId, listOf(playerName) )
@@ -78,7 +78,7 @@ class MainControllerTests {
 
     @Test
     fun submitQuestionToQuizThatDoesNotEquist() {
-        var controller = MainController()
+        val controller = MainController()
 
         val result = submitQuestion(controller, "id123", "");
 
@@ -87,7 +87,7 @@ class MainControllerTests {
 
     @Test
     fun submitQuestionToQuizThatDoesNotHaveThatPlayer() {
-        var controller = MainController()
+        val controller = MainController()
         createQuizWithPlayers(controller, "quiz1", listOf("player1"))
         createQuizWithPlayers(controller, "quiz2", listOf("player2"))
 
@@ -97,9 +97,13 @@ class MainControllerTests {
     }
 
     fun submitQuestion(controller: MainController, quizId:String, playerName:String): String{
+        return submitQuestion(controller, quizId, Question("", playerName))
+    }
+
+    fun submitQuestion(controller: MainController, quizId:String, question:Question): String{
         val body = "{" +
                 "\"quizId\":\"${quizId}\"" +
-                "\"playerName\":\"${playerName}\"" +
+                "\"question\":" + Klaxon().toJsonString(question) +
                 "}"
 
         return controller.submit(body);
@@ -112,17 +116,15 @@ class MainControllerTests {
 
     @Test
     fun listUsersWhoHaveSubmittedAQuestion() {
-        var controller = MainController()
-        var quizId = "a-quiz"
+        val controller = MainController()
+        val quizId = "a-quiz"
         createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
-
 
         submitQuestion(controller, quizId, "person1");
         submitQuestion(controller, quizId, "person3");
 
-
-        var expectedPlayersWithQuestion = listOf("person1", "person3")
-        var playersWithQuestionResult = controller.listParticipants(quizId, true);
+        val expectedPlayersWithQuestion = listOf("person1", "person3")
+        val playersWithQuestionResult = controller.listParticipants(quizId, true);
 
         Assertions.assertEquals(expectedPlayersWithQuestion.toString(), playersWithQuestionResult)
     }
@@ -130,16 +132,16 @@ class MainControllerTests {
 
     @Test
     fun listUsersWhoHaveNotSubmittedAQuestion() {
-        var controller = MainController()
-        var quizId = "a-quiz"
+        val controller = MainController()
+        val quizId = "a-quiz"
         createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
 
 
         submitQuestion(controller, quizId, "person1");
         submitQuestion(controller, quizId, "person3");
 
-        var expectedPlayersWithoutQuestion = listOf("person2", "person4")
-        var playersWithoutQuestionResult = controller.listParticipants(quizId, false);
+        val expectedPlayersWithoutQuestion = listOf("person2", "person4")
+        val playersWithoutQuestionResult = controller.listParticipants(quizId, false);
 
         Assertions.assertEquals(expectedPlayersWithoutQuestion.toString(), playersWithoutQuestionResult)
     }
@@ -147,8 +149,8 @@ class MainControllerTests {
 
     @Test
     fun beforeTheQuizHasBeenStarted() {
-        var controller = MainController()
-        var quizId = "a-quiz"
+        val controller = MainController()
+        val quizId = "a-quiz"
         controller.create(quizId)
 
         Assertions.assertEquals("false", controller.hasStarted(quizId))
@@ -156,28 +158,34 @@ class MainControllerTests {
 
     @Test
     fun afterTheQuizHasBeenStarted() {
-        var controller = MainController()
-        var quizId = "a-quiz"
+        val controller = MainController()
+        val quizId = "a-quiz"
+
         controller.create(quizId)
-
         controller.start(quizId)
-
 
         Assertions.assertEquals("true", controller.hasStarted(quizId))
     }
 
     @Test
-    fun currentQuestionReturnsAValidQuestion() {
-        var controller = MainController()
-        var quizId = "a-quiz"
+    fun currentQuestionReturnsNoIfQuizHasNoQuestions() {
+        val controller = MainController()
+        val quizId = "a-quiz"
 
+        Assertions.assertEquals("NO", controller.currentQuestion(quizId) )
+    }
 
-
-
-        val result = Klaxon()
-                .parse<Question>(controller.currentQuestion(quizId))
-
-        Assertions.assertNotNull(result?.questionText)
+    @Test
+    fun firstQuestionReturnsFirstSubmittedQuestion() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        val player = "player1"
+        createQuizWithPlayers(controller, quizId, listOf(player))
+        val questionText = "Is this question 1?"
+        val question = Question(questionText, player)
+        submitQuestion(controller, quizId, question)
+        val result = Klaxon().parse<Question>(controller.currentQuestion(quizId))
+        Assertions.assertEquals(question, result)
     }
 
 }

@@ -4,8 +4,8 @@ import com.beust.klaxon.Klaxon
 import org.springframework.web.bind.annotation.*
 
 class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
-class Quiz(val id: String, var hasStarted: Boolean = false)
-data class Question(val questionText:String)
+class Quiz(val id: String, var hasStarted: Boolean = false, val questions:MutableList<Question> = mutableListOf<Question>())
+data class Question(val questionText:String, val submittedBy: String)
 
 @RestController
 class MainController {
@@ -39,27 +39,27 @@ class MainController {
         return existingQuizes.first { it.id == quizId }.hasStarted.toString()
     }
 
-    data class SubmissionBody(val quizId: String, val playerName: String)
+    data class SubmissionBody(val quizId: String, val question: Question)
 
     @PutMapping("/submit")
     fun submit(@RequestBody body: String): String {
         //println("submittedQuestion: "+ body)
 
         val parsedBody = Klaxon()
-                .parse<SubmissionBody>(body)
+                .parse<SubmissionBody>(body) ?: return "NO"
 
-        val quizParticipants = participants[parsedBody?.quizId];
-        val player:Player? = quizParticipants?.filter {it.name ==(parsedBody?.playerName)}?.firstOrNull()
+        println("submitted question for "+ parsedBody.quizId )
 
-        if (player == null) {
-           return "NO"
-        }
-        player?.hasSubmittedQuestion = true
+        val question = parsedBody.question
+        val quizParticipants = participants[parsedBody.quizId] ?: return "NO";
+        val quiz = existingQuizes.firstOrNull { it.id == parsedBody.quizId } ?: return "NO"
+        val player: Player = quizParticipants.firstOrNull {it.name ==question.submittedBy} ?: return "NO"
+
+        player.hasSubmittedQuestion = true
+        quiz.questions.add(question)
 
         return "OK"
     }
-
-
 
     @GetMapping("/listParticipants")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String): String {
@@ -68,7 +68,10 @@ class MainController {
 
     @GetMapping("/currentQuestion")
     fun currentQuestion(@RequestParam(value = "quizId") quizId: String): String {
-        return Klaxon().toJsonString(Question("some question text"))
+        println("currentQuestion for "+ quizId )
+        val quiz = existingQuizes.firstOrNull{ it.id == quizId } ?: return "NO"
+        val question = quiz.questions.firstOrNull() ?: return "NO"
+        return Klaxon().toJsonString(question)
     }
 
     @GetMapping("/listParticipantsWho")
