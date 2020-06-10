@@ -176,16 +176,25 @@ class MainControllerTests {
     }
 
     @Test
-    fun firstQuestionReturnsFirstSubmittedQuestion() {
+    fun firstQuestionReturnsFirstSubmittedQuestionWithPossibleAnswers() {
         val controller = MainController()
         val quizId = "a-quiz"
         val player = "player1"
         createQuizWithPlayers(controller, quizId, listOf(player))
         val questionText = "Is this question 1?"
-        val question = Question(questionText, player)
+        val answers = listOf("Option 1", "Option 2", "Option 3", "Option 4")
+        val correctQuestionId = 2
+        val question = Question(questionText, player, answers, correctQuestionId)
         submitQuestion(controller, quizId, question)
         val result = Klaxon().parse<Question>(controller.currentQuestion(quizId))
         Assertions.assertEquals(question, result)
+    }
+
+    @Test
+    fun questionEqualsComparesAnswers() {
+        val q1 = Question("blah", "blah", listOf("a", "b", "c"), 0)
+        val q2 = Question("blah", "blah", listOf("a", "c", "b"), 0)
+        Assertions.assertNotEquals(q1,q2)
     }
 
 }

@@ -5,7 +5,9 @@ import org.springframework.web.bind.annotation.*
 
 class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
 class Quiz(val id: String, var hasStarted: Boolean = false, val questions:MutableList<Question> = mutableListOf<Question>())
-data class Question(val questionText:String, val submittedBy: String)
+data class Question(val questionText:String, val submittedBy: String, val answers: List<String> = listOf(), val correctQuestionId: Int = 0)
+
+
 
 @RestController
 class MainController {
@@ -71,6 +73,9 @@ class MainController {
         println("currentQuestion for "+ quizId )
         val quiz = existingQuizes.firstOrNull{ it.id == quizId } ?: return "NO"
         val question = quiz.questions.firstOrNull() ?: return "NO"
+
+        //val question = Question("sample", "someone", listOf("option 1", "option 2", "option 3", "option 4") ,0 )
+
         return Klaxon().toJsonString(question)
     }
 
