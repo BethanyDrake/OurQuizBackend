@@ -124,7 +124,7 @@ class MainControllerTests {
         submitQuestion(controller, quizId, "person3");
 
         val expectedPlayersWithQuestion = listOf("person1", "person3")
-        val playersWithQuestionResult = controller.listParticipants(quizId, true);
+        val playersWithQuestionResult = controller.listParticipants(quizId, false);
 
         Assertions.assertEquals(expectedPlayersWithQuestion.toString(), playersWithQuestionResult)
     }
@@ -141,7 +141,7 @@ class MainControllerTests {
         submitQuestion(controller, quizId, "person3");
 
         val expectedPlayersWithoutQuestion = listOf("person2", "person4")
-        val playersWithoutQuestionResult = controller.listParticipants(quizId, false);
+        val playersWithoutQuestionResult = controller.listParticipants(quizId, true);
 
         Assertions.assertEquals(expectedPlayersWithoutQuestion.toString(), playersWithoutQuestionResult)
     }
@@ -153,7 +153,7 @@ class MainControllerTests {
         val quizId = "a-quiz"
         controller.create(quizId)
 
-        Assertions.assertEquals("false", controller.hasStarted(quizId))
+        Assertions.assertEquals("-1", controller.stage(quizId))
     }
 
     @Test
@@ -164,7 +164,7 @@ class MainControllerTests {
         controller.create(quizId)
         controller.start(quizId)
 
-        Assertions.assertEquals("true", controller.hasStarted(quizId))
+        Assertions.assertEquals("0", controller.stage(quizId))
     }
 
     @Test

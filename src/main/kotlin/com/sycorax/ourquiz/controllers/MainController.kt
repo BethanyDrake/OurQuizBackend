@@ -4,7 +4,7 @@ import com.beust.klaxon.Klaxon
 import org.springframework.web.bind.annotation.*
 
 class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
-class Quiz(val id: String, var hasStarted: Boolean = false, val questions:MutableList<Question> = mutableListOf<Question>())
+class Quiz(val id: String, var stage: Int = -1, val questions:MutableList<Question> = mutableListOf<Question>())
 data class Question(val questionText:String, val submittedBy: String, val answers: List<String> = listOf(), val correctQuestionId: Int = 0)
 
 
@@ -32,13 +32,13 @@ class MainController {
 
     @PutMapping("/start")
     fun start(@RequestParam(value = "quizId") quizId: String):String {
-        existingQuizes.first { it.id == quizId }.hasStarted = true
+        existingQuizes.first { it.id == quizId }.stage = 0
         return "OK"
     }
 
-    @GetMapping("/hasStarted")
-    fun hasStarted(@RequestParam(value = "quizId") quizId: String): String {
-        return existingQuizes.first { it.id == quizId }.hasStarted.toString()
+    @GetMapping("/stage")
+    fun stage(@RequestParam(value = "quizId") quizId: String): String {
+        return existingQuizes.first { it.id == quizId }.stage.toString()
     }
 
     data class SubmissionBody(val quizId: String, val question: Question)
@@ -80,7 +80,8 @@ class MainController {
     }
 
     @GetMapping("/listParticipantsWho")
-    fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "hasSubmittedQuestion") hasSubmittedQuestion: Boolean): String {
+    fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "waiting") waiting: Boolean): String {
+        val hasSubmittedQuestion = !waiting
         return participants[quizId]?.filter { it.hasSubmittedQuestion == hasSubmittedQuestion }?.map { it.name }.toString()
     }
 
