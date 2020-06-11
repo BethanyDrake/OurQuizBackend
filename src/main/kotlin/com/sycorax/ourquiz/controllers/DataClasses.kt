@@ -8,7 +8,8 @@ data class Player(
 
 data class Quiz(
         val id: String,
-        var stage: Int = -1,
+        var hasStarted:Boolean = false,
+        var currentQuestion: Int = -1,
         val questions:MutableList<Question> = mutableListOf<Question>())
 
 data class Question(

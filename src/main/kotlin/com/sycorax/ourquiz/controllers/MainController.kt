@@ -33,7 +33,9 @@ class MainController(
 
     @PutMapping("/start")
     fun start(@RequestParam(value = "quizId") quizId: String):String {
-        existingQuizes.first { it.id == quizId }.stage = 0
+        val quiz = getQuizById(quizId)
+        quiz.currentQuestion = 0
+        quiz.hasStarted = true
         return "OK"
     }
 
@@ -42,9 +44,9 @@ class MainController(
         // -1 means not yet started
         // 0 to questions.size means question number
         // questions.size means finished
-
-
-        return existingQuizes.first { it.id == quizId }.stage.toString()
+        val quiz = getQuizById(quizId)
+        if (!quiz.hasStarted) return "-1"
+        return existingQuizes.first { it.id == quizId }.currentQuestion.toString()
     }
 
     data class SubmissionBody(val quizId: String, val question: Question)
@@ -88,8 +90,17 @@ class MainController(
     @GetMapping("/listParticipantsWho")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "waiting") waiting: Boolean): String {
 
+        val playersForQuiz = participants[quizId]?.toList() ?: listOf()
+        val quiz = getQuizById(quizId)
+        var players: List<Player> = listOf()
 
-        return listParticipantsService.listParticipantsWho(waiting, participants, quizId)
+        if (!waiting) {
+            players = listParticipantsService.listDoneParticipants(playersForQuiz, quiz)
+        }else {
+            players = listParticipantsService.listPendingParticipants(playersForQuiz, quiz)
+        }
+
+        return players.map{it.name}.toString()
 
 
     }

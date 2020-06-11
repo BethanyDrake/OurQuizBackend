@@ -2,10 +2,7 @@ package com.sycorax.ourquiz
 
 import com.beust.klaxon.Klaxon
 import com.sun.org.apache.xpath.internal.operations.Bool
-import com.sycorax.ourquiz.controllers.Player
-import com.sycorax.ourquiz.controllers.Question
-import com.sycorax.ourquiz.controllers.Quiz
-import com.sycorax.ourquiz.controllers.SubmitAnswerService
+import com.sycorax.ourquiz.controllers.*
 import io.mockk.*
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -122,57 +119,49 @@ class MainControllerTests {
     }
 
     @Test
-    fun listUsersWhoHaveSubmittedAQuestion() {
-        val controller = MainController()
+    fun `listParticipantsWho --when waiting=true -- delegates to service`() {
+        val mService = mockk<ListParticipantsService>(relaxed = true)
+        val controller = MainController(listParticipantsService = mService)
         val quizId = "a-quiz"
-        createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
+        createQuizWithPlayers(controller, quizId, listOf("a"))
 
-        submitQuestion(controller, quizId, "person1");
-        submitQuestion(controller, quizId, "person3");
+        controller.listParticipants(quizId, true)
 
-        val expectedPlayersWithQuestion = listOf("person1", "person3")
-        val playersWithQuestionResult = controller.listParticipants(quizId, false);
+        verify { mService.listPendingParticipants(any(), any())  }
 
-        Assertions.assertEquals(expectedPlayersWithQuestion.toString(), playersWithQuestionResult)
     }
-
 
     @Test
-    fun listUsersWhoHaveNotSubmittedAQuestion() {
-        val controller = MainController()
+    fun `listParticipantsWho --when waiting=false -- delegates to service`() {
+        val mService = mockk<ListParticipantsService>(relaxed = true)
+        val controller = MainController(listParticipantsService = mService)
         val quizId = "a-quiz"
-        createQuizWithPlayers(controller, quizId, listOf("person1", "person2", "person3", "person4"))
+        createQuizWithPlayers(controller, quizId, listOf("a"))
 
+        controller.listParticipants(quizId, false)
+        verify { mService.listDoneParticipants(any(), any())  }
 
-        submitQuestion(controller, quizId, "person1");
-        submitQuestion(controller, quizId, "person3");
-
-        val expectedPlayersWithoutQuestion = listOf("person2", "person4")
-        val playersWithoutQuestionResult = controller.listParticipants(quizId, true);
-
-        Assertions.assertEquals(expectedPlayersWithoutQuestion.toString(), playersWithoutQuestionResult)
     }
 
+    @Test
+    fun beforeTheQuizHasBeenStarted() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        controller.create(quizId)
 
-//    @Test
-//    fun beforeTheQuizHasBeenStarted() {
-//        val controller = MainController()
-//        val quizId = "a-quiz"
-//        controller.create(quizId)
-//
-//        Assertions.assertEquals("-1", controller.stage(quizId))
-//    }
-//
-//    @Test
-//    fun afterTheQuizHasBeenStarted() {
-//        val controller = MainController()
-//        val quizId = "a-quiz"
-//
-//        controller.create(quizId)
-//        controller.start(quizId)
-//
-//        Assertions.assertEquals("0", controller.stage(quizId))
-//    }
+        Assertions.assertEquals("-1", controller.stage(quizId))
+    }
+
+    @Test
+    fun afterTheQuizHasBeenStarted() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+
+        controller.create(quizId)
+        controller.start(quizId)
+
+        Assertions.assertEquals("0", controller.stage(quizId))
+    }
 
     @Test
     fun currentQuestionReturnsNoIfQuizHasNoQuestions() {

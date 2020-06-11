@@ -15,7 +15,7 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", 0, questions)
+        val quiz = Quiz("id", true, 0, questions)
 
 
         val players = listOf(Player("player1"))
@@ -30,7 +30,7 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", 1, questions)
+        val quiz = Quiz("id",true, 1, questions)
 
 
         val player = Player("player1", lastAnsweredQuestion = 0)
@@ -46,7 +46,7 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", 0, questions)
+        val quiz = Quiz("id", true, 0, questions)
 
         val players = listOf(Player("player1"))
 
@@ -60,7 +60,7 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", 0, questions)
+        val quiz = Quiz("id", true, 0, questions)
 
         val players = listOf(Player("player1"))
 
