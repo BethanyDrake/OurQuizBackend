@@ -1,16 +1,17 @@
 package com.sycorax.ourquiz
 
 import com.beust.klaxon.Klaxon
+import com.sycorax.ourquiz.controllers.*
 import org.springframework.web.bind.annotation.*
 
-class Player(val name:String, var hasSubmittedQuestion: Boolean = false)
-class Quiz(val id: String, var stage: Int = -1, val questions:MutableList<Question> = mutableListOf<Question>())
-data class Question(val questionText:String, val submittedBy: String, val answers: List<String> = listOf(), val correctQuestionId: Int = 0)
-
+data class SubmitAnswerBody(val quizId: String, val playerName: String, val questionNumber: Int, val answerId:Int)
 
 
 @RestController
-class MainController {
+class MainController(
+        val submitAnswerService: SubmitAnswerService = SubmitAnswerService(),
+        val listParticipantsService: ListParticipantsService = ListParticipantsService()
+) {
 
     val existingQuizes = mutableListOf(Quiz("existing-quiz-id"));
 
@@ -38,6 +39,11 @@ class MainController {
 
     @GetMapping("/stage")
     fun stage(@RequestParam(value = "quizId") quizId: String): String {
+        // -1 means not yet started
+        // 0 to questions.size means question number
+        // questions.size means finished
+
+
         return existingQuizes.first { it.id == quizId }.stage.toString()
     }
 
@@ -81,8 +87,11 @@ class MainController {
 
     @GetMapping("/listParticipantsWho")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "waiting") waiting: Boolean): String {
-        val hasSubmittedQuestion = !waiting
-        return participants[quizId]?.filter { it.hasSubmittedQuestion == hasSubmittedQuestion }?.map { it.name }.toString()
+
+
+        return listParticipantsService.listParticipantsWho(waiting, participants, quizId)
+
+
     }
 
     var participants = hashMapOf<String, MutableList<Player>>()
@@ -98,6 +107,19 @@ class MainController {
             return "OK"
         }
         return "NO"
+    }
+
+    fun getQuizById(id: String): Quiz{
+        return existingQuizes.first { it.id == id }
+    }
+
+    @PutMapping("/submitAnswer")
+    fun submitAnswer(@RequestBody body: String): String {
+        val parsedBody = Klaxon().parse<SubmitAnswerBody>(body)
+        if (parsedBody == null) return "NO"
+
+
+        return submitAnswerService.submitAnswer(getQuizById(parsedBody.quizId), participants[parsedBody.quizId]!!.toList(), parsedBody.questionNumber, parsedBody.answerId, "")
     }
 
     private fun quizExists(quizId: String): Boolean {
