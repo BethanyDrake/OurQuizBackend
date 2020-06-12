@@ -10,6 +10,7 @@ data class Quiz(
         val id: String,
         var hasStarted:Boolean = false,
         var currentQuestion: Int = -1,
+        val players: MutableList<Player> = mutableListOf(),
         val questions:MutableList<Question> = mutableListOf<Question>())
 
 data class Question(
@@ -17,3 +18,5 @@ data class Question(
         val submittedBy: String,
         val answers: List<String> = listOf(),
         val correctQuestionId: Int = 0)
+
+

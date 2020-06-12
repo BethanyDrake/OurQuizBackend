@@ -194,13 +194,37 @@ class MainControllerTests {
     }
 
     @Test
+    fun `submitAnswer -- delegated service mutates player`() {
+        val controller = MainController()
+        controller.existingQuizes.add(Quiz(
+                "a-quiz",
+                true,
+                0,
+                players = mutableListOf(Player("p1", true, -1)) ,
+                questions = mutableListOf(Question("q1", "p2")))
+        )
+
+
+        val submitAnswerBody = SubmitAnswerBody("a-quiz", "p1", 0, 2)
+
+        val result = controller.submitAnswer(Klaxon().toJsonString(submitAnswerBody))
+        assertEquals("OK", result)
+        val quiz = controller.existingQuizes.last()
+        val player = quiz.players[0]
+        assertEquals(0, player.lastAnsweredQuestion)
+
+
+
+    }
+
+    @Test
     fun `submitAnswer -- delegates`() {
         //delegates to SubmitAnswer with the quiz, its participants, and the parsed submission body
 
         val mSubmitAnswerService = mockk<SubmitAnswerService>()
         val quizCaptureSlot = CapturingSlot<Quiz>()
-        val playersCaptureSlot = CapturingSlot<List<Player>>()
-        every { mSubmitAnswerService.submitAnswer(capture(quizCaptureSlot), capture(playersCaptureSlot), any(), any(), any()) } returns "mocked result"
+        //val playersCaptureSlot = CapturingSlot<List<Player>>()
+        every { mSubmitAnswerService.submitAnswer(capture(quizCaptureSlot), any(), any(), any()) } returns "mocked result"
 
 
 
@@ -222,14 +246,11 @@ class MainControllerTests {
         assertTrue { quizCaptureSlot.isCaptured }
         assertEquals(quizId, quizCaptureSlot.captured.id)
 
-        assertTrue { playersCaptureSlot.isCaptured }
-        assertEquals(1, playersCaptureSlot.captured.size)
-        assertEquals(player, playersCaptureSlot.captured[0].name)
+        //assertTrue { playersCaptureSlot.isCaptured }
+        assertEquals(1, quizCaptureSlot.captured.players.size)
+        assertEquals(player, quizCaptureSlot.captured.players[0].name)
 
-        verify { mSubmitAnswerService.submitAnswer(any(), any(), 7, 2, "") }
+        verify { mSubmitAnswerService.submitAnswer(any(), 7, 2, player) }
     }
-
-
-
 
 }

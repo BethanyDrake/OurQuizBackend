@@ -9,6 +9,10 @@ class ListParticipantsService {
     }
 
     fun listPendingParticipants(players: List<Player>, quiz:Quiz): List<Player>{
+        println("listing pending participants: " + players.map{
+            it.name +" " + it.hasSubmittedQuestion +" " + it.lastAnsweredQuestion
+        })
+
         if (!quiz.hasStarted) {
             return players.filter { !it.hasSubmittedQuestion }
         }

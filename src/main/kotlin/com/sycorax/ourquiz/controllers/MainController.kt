@@ -33,7 +33,7 @@ class MainController(
 
     @PutMapping("/start")
     fun start(@RequestParam(value = "quizId") quizId: String):String {
-        val quiz = getQuizById(quizId)
+        val quiz = getQuizById(quizId)?: return "NO"
         quiz.currentQuestion = 0
         quiz.hasStarted = true
         return "OK"
@@ -44,7 +44,7 @@ class MainController(
         // -1 means not yet started
         // 0 to questions.size means question number
         // questions.size means finished
-        val quiz = getQuizById(quizId)
+        val quiz = getQuizById(quizId)?:return "NO"
         if (!quiz.hasStarted) return "-1"
         return existingQuizes.first { it.id == quizId }.currentQuestion.toString()
     }
@@ -61,9 +61,9 @@ class MainController(
         println("submitted question for "+ parsedBody.quizId )
 
         val question = parsedBody.question
-        val quizParticipants = participants[parsedBody.quizId] ?: return "NO";
+
         val quiz = existingQuizes.firstOrNull { it.id == parsedBody.quizId } ?: return "NO"
-        val player: Player = quizParticipants.firstOrNull {it.name ==question.submittedBy} ?: return "NO"
+        val player: Player = quiz.players.firstOrNull {it.name ==question.submittedBy} ?: return "NO"
 
         player.hasSubmittedQuestion = true
         quiz.questions.add(question)
@@ -73,7 +73,9 @@ class MainController(
 
     @GetMapping("/listParticipants")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String): String {
-        return participants[quizId]?.map { it.name }.toString()
+
+        val players = getQuizById(quizId)?.players ?: listOf<Player>()
+        return players.map { it.name }.toString()
     }
 
     @GetMapping("/currentQuestion")
@@ -90,14 +92,14 @@ class MainController(
     @GetMapping("/listParticipantsWho")
     fun listParticipants(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "waiting") waiting: Boolean): String {
 
-        val playersForQuiz = participants[quizId]?.toList() ?: listOf()
-        val quiz = getQuizById(quizId)
+        //val playersForQuiz = participants[quizId]?.toList() ?: listOf()
+        val quiz = getQuizById(quizId) ?: return "NO"
         var players: List<Player> = listOf()
 
         if (!waiting) {
-            players = listParticipantsService.listDoneParticipants(playersForQuiz, quiz)
+            players = listParticipantsService.listDoneParticipants(quiz.players, quiz)
         }else {
-            players = listParticipantsService.listPendingParticipants(playersForQuiz, quiz)
+            players = listParticipantsService.listPendingParticipants(quiz.players, quiz)
         }
 
         return players.map{it.name}.toString()
@@ -105,32 +107,27 @@ class MainController(
 
     }
 
-    var participants = hashMapOf<String, MutableList<Player>>()
+    //var participants = hashMapOf<String, MutableList<Player>>()
 
     @GetMapping("/join")
     fun join(@RequestParam(value = "quizId") quizId: String,  @RequestParam(value = "name") name: String): String {
-        if (quizExists(quizId)) {
-            if (!participants.containsKey(quizId)) {
-                participants[quizId] = mutableListOf<Player>()
-            }
-            participants[quizId]?.add(Player(name))
+        val quiz = getQuizById(quizId) ?: return "NO"
 
-            return "OK"
-        }
-        return "NO"
+        quiz.players.add(Player(name))
+        return "OK"
+
     }
 
-    fun getQuizById(id: String): Quiz{
-        return existingQuizes.first { it.id == id }
+    fun getQuizById(id: String): Quiz?{
+        return existingQuizes.firstOrNull { it.id == id }
     }
 
     @PutMapping("/submitAnswer")
     fun submitAnswer(@RequestBody body: String): String {
-        val parsedBody = Klaxon().parse<SubmitAnswerBody>(body)
-        if (parsedBody == null) return "NO"
-
-
-        return submitAnswerService.submitAnswer(getQuizById(parsedBody.quizId), participants[parsedBody.quizId]!!.toList(), parsedBody.questionNumber, parsedBody.answerId, "")
+        println("submitAnswer: " + body)
+        val parsedBody = Klaxon().parse<SubmitAnswerBody>(body) ?: return "NO"
+        val quiz = getQuizById(parsedBody.quizId) ?: return "NO"
+        return submitAnswerService.submitAnswer(quiz, parsedBody.questionNumber, parsedBody.answerId, parsedBody.playerName)
     }
 
     private fun quizExists(quizId: String): Boolean {

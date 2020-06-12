@@ -15,12 +15,9 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", true, 0, questions)
+        val quiz = Quiz("id", true, 0, mutableListOf(Player("player1")), questions)
 
-
-        val players = listOf(Player("player1"))
-
-        val result = service.submitAnswer(quiz,players, 0, 0, "player1" )
+        val result = service.submitAnswer(quiz, 0, 0, "player1" )
 
         assertEquals("OK", result)
     }
@@ -30,13 +27,10 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id",true, 1, questions)
+        val player = Player("player1", lastAnsweredQuestion = -1)
+        val quiz = Quiz("id",true, 1, mutableListOf(player), questions)
 
-
-        val player = Player("player1", lastAnsweredQuestion = 0)
-        val players = listOf(player)
-
-        service.submitAnswer(quiz,players, 1, 0, "player1" )
+        service.submitAnswer(quiz, 1, 0, "player1" )
 
         assertEquals(1, player.lastAnsweredQuestion)
     }
@@ -46,13 +40,13 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", true, 0, questions)
+        val quiz = Quiz("id", true, 0, mutableListOf(), questions)
 
         val players = listOf(Player("player1"))
 
-        val result = service.submitAnswer(quiz,players, 6, 0, "player1" )
+        val result = service.submitAnswer(quiz, 6, 0, "player1" )
 
-        assertEquals("NO", result)
+        assertEquals("NO - wrong question", result)
     }
 
     @Test
@@ -60,13 +54,13 @@ class SubmitAnswerTests {
 
         val service = SubmitAnswerService()
         val questions = mutableListOf(Question("id", "name"))
-        val quiz = Quiz("id", true, 0, questions)
+        val quiz = Quiz("id", true, 0,mutableListOf(), questions)
 
         val players = listOf(Player("player1"))
 
-        val result = service.submitAnswer(quiz,players, 0, 0, "other player")
+        val result = service.submitAnswer(quiz, 0, 0, "other player")
 
-        assertEquals("NO", result)
+        assertEquals("NO - player has not joined quiz", result)
     }
 
 
