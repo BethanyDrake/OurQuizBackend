@@ -149,24 +149,53 @@ class MainControllerTests {
         val quizId = "a-quiz"
         controller.create(quizId)
 
-        Assertions.assertEquals("-1", controller.stage(quizId))
+        val expectedStatus = StatusResponse(-1, false)
+        val response = controller.stage(quizId)
+        val parsedResponse = Klaxon().parse<StatusResponse>(response)
+
+        Assertions.assertEquals(expectedStatus, parsedResponse)
     }
 
     @Test
-    fun afterTheQuizHasBeenStarted() {
+    fun `stage - afterTheQuizHasBeenStarted`() {
         val controller = MainController()
         val quizId = "a-quiz"
 
-        controller.create(quizId)
+        createQuizWithPlayers(controller, quizId, listOf("p1"))
+        submitQuestion(controller, quizId, "p1")
+
         controller.start(quizId)
 
-        Assertions.assertEquals("0", controller.stage(quizId))
+        val expectedStatus = StatusResponse(0, false)
+        val response = controller.stage(quizId)
+        val parsedResponse = Klaxon().parse<StatusResponse>(response)
+
+        Assertions.assertEquals(expectedStatus, parsedResponse)
+    }
+
+    @Test
+    fun `stage - after the first question has been revealed`() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+
+        createQuizWithPlayers(controller, quizId, listOf("p1"))
+        submitQuestion(controller, quizId, "p1")
+
+        controller.start(quizId)
+        controller.revealQuestion(quizId, "0")
+
+        val expectedStatus = StatusResponse(0, true)
+        val response = controller.stage(quizId)
+        val parsedResponse = Klaxon().parse<StatusResponse>(response)
+
+        Assertions.assertEquals(expectedStatus, parsedResponse)
     }
 
     @Test
     fun currentQuestionReturnsNoIfQuizHasNoQuestions() {
         val controller = MainController()
         val quizId = "a-quiz"
+        createQuizWithPlayers(controller, quizId, listOf())
 
         Assertions.assertEquals("NO", controller.currentQuestion(quizId) )
     }

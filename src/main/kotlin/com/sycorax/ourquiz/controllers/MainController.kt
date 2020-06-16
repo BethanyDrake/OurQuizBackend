@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*
 
 data class SubmitAnswerBody(val quizId: String, val playerName: String, val questionNumber: Int, val answerId:Int)
 
-
 @RestController
 class MainController(
         val submitAnswerService: SubmitAnswerService = SubmitAnswerService(),
@@ -39,14 +38,29 @@ class MainController(
         return "OK"
     }
 
+    @PutMapping("/revealQuestion")
+    fun revealQuestion(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String ):String {
+        val quiz = getQuizById(quizId) ?: return "NO"
+        val parsedQuestionNumber = questionNumber.toIntOrNull() ?: return "NO"
+
+        try{
+            RevealQuestionService().revealQuestion(quiz, parsedQuestionNumber)
+        } catch(e:Exception) {
+            return "NO"
+        }
+
+        return "OK"
+    }
+
     @GetMapping("/stage")
     fun stage(@RequestParam(value = "quizId") quizId: String): String {
-        // -1 means not yet started
-        // 0 to questions.size means question number
-        // questions.size means finished
         val quiz = getQuizById(quizId)?:return "NO"
-        if (!quiz.hasStarted) return "-1"
-        return existingQuizes.first { it.id == quizId }.currentQuestion.toString()
+
+        val response = StatusService().getStatus(quiz)
+
+
+        //return existingQuizes.first { it.id == quizId }.currentQuestion.toString()
+        return Klaxon().toJsonString(response)
     }
 
     data class SubmissionBody(val quizId: String, val question: Question)
