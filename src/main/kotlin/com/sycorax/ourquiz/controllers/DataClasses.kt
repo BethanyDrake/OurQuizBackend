@@ -4,7 +4,8 @@ package com.sycorax.ourquiz.controllers
 data class Player(
         val name:String,
         var hasSubmittedQuestion: Boolean = false,
-        var lastAnsweredQuestion: Int = -1)
+        var lastAnsweredQuestion: Int = -1,
+        val answers: MutableList<Int> = mutableListOf())
 
 data class Quiz(
         val id: String,
@@ -17,7 +18,7 @@ data class Question(
         val questionText:String,
         val submittedBy: String,
         val answers: List<String> = listOf(),
-        val correctQuestionId: Int = 0,
+        val correctAnswerId: Int = 0,
         var revealed: Boolean = false)
 
 

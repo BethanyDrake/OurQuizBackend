@@ -1,7 +1,6 @@
 package com.sycorax.ourquiz
 
 import com.beust.klaxon.Klaxon
-import com.sun.org.apache.xpath.internal.operations.Bool
 import com.sycorax.ourquiz.controllers.*
 import io.mockk.*
 import org.junit.jupiter.api.Test
@@ -243,6 +242,30 @@ class MainControllerTests {
         assertEquals(0, player.lastAnsweredQuestion)
 
 
+
+    }
+
+    @Test
+    fun `reveal answer -- gets correct answer text for that question -- and the answer the player provided`(){
+        val controller = MainController()
+        val quizId = "a-quiz"
+
+        createQuizWithPlayers(controller, quizId, listOf("p1"))
+        submitQuestion(controller, quizId, Question("Question text?", "p1",listOf("MY PICK", "no", "CORRECT ANSWER", "no"), 2 ))
+        controller.start(quizId)
+
+        val submitAnswerBody = SubmitAnswerBody(quizId, "p1", 0, 0)
+        controller.submitAnswer(Klaxon().toJsonString(submitAnswerBody))
+
+        val result = controller.revealAnswer(quizId, "0", "p1")
+
+        try {
+            val parsedResult = Klaxon().parse<RevealAnswerResponse>(result);
+            assertEquals("CORRECT ANSWER", parsedResult?.answerText)
+            assertEquals("MY PICK", parsedResult?.yourAnswer)
+        } catch(e:Exception) {
+            kotlin.test.fail(result)
+        }
 
     }
 

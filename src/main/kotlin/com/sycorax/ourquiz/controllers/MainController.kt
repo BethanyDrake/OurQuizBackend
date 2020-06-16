@@ -5,6 +5,7 @@ import com.sycorax.ourquiz.controllers.*
 import org.springframework.web.bind.annotation.*
 
 data class SubmitAnswerBody(val quizId: String, val playerName: String, val questionNumber: Int, val answerId:Int)
+data class RevealAnswerResponse(val answerText: String, val yourAnswer: String)
 
 @RestController
 class MainController(
@@ -90,6 +91,25 @@ class MainController(
 
         val players = getQuizById(quizId)?.players ?: listOf<Player>()
         return players.map { it.name }.toString()
+    }
+
+    @GetMapping("/correctAnswer")
+    fun revealAnswer(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String, @RequestParam(value = "playerName") playerName: String): String {
+        println("getting correct answer: quizId: " + quizId + " questionNumber: "+ questionNumber + " playerName: " + playerName)
+
+        val quiz = getQuizById(quizId) ?: return "NO"
+        val parsedQuestionNumber = questionNumber.toIntOrNull() ?: return "NO"
+        val question = quiz.questions[parsedQuestionNumber]
+
+        val correctAnswerText = question.answers[question.correctAnswerId]
+
+        val player: Player = quiz.players.firstOrNull { it.name == playerName } ?: return "NO - player has not joined this quiz"
+        if (player.answers.count() <= parsedQuestionNumber ) return "NO - question not yet answered by player"
+        val playerAnswerId = player.answers[parsedQuestionNumber]
+        val yourAnswer = question.answers[playerAnswerId]
+        val response = RevealAnswerResponse(correctAnswerText, yourAnswer)
+
+        return Klaxon().toJsonString(response)
     }
 
     @GetMapping("/currentQuestion")
