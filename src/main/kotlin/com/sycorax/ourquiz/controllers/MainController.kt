@@ -4,7 +4,7 @@ import com.beust.klaxon.Klaxon
 import com.sycorax.ourquiz.controllers.*
 import org.springframework.web.bind.annotation.*
 
-data class SubmitAnswerBody(val quizId: String, val playerName: String, val questionNumber: Int, val answerId:Int)
+data class SubmitAnswerBody(val quizId: String, val playerName: String, val questionNumber: Int, val answerId: Int)
 data class RevealAnswerResponse(val answerText: String, val yourAnswer: String)
 
 @RestController
@@ -14,7 +14,6 @@ class MainController(
 ) {
 
     val existingQuizes = mutableListOf(Quiz("existing-quiz-id"));
-
 
 
     @GetMapping("/hello")
@@ -32,21 +31,32 @@ class MainController(
     }
 
     @PutMapping("/start")
-    fun start(@RequestParam(value = "quizId") quizId: String):String {
-        val quiz = getQuizById(quizId)?: return "NO"
+    fun start(@RequestParam(value = "quizId") quizId: String): String {
+        val quiz = getQuizById(quizId) ?: return "NO"
         quiz.currentQuestion = 0
         quiz.hasStarted = true
         return "OK"
     }
 
+    @PutMapping("/nextQuestion")
+    fun nextQuestion(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "currentQuestion") currentQuestion: String): String {
+        val quiz = getQuizById(quizId) ?: return "NO - quiz does not exist"
+        val parsedCurrentQuestion = currentQuestion.toIntOrNull()
+        if (quiz.currentQuestion != parsedCurrentQuestion) return "NO - current question does not match"
+
+        quiz.currentQuestion +=1
+        return "OK"
+    }
+
+
     @PutMapping("/revealQuestion")
-    fun revealQuestion(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String ):String {
+    fun revealQuestion(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String): String {
         val quiz = getQuizById(quizId) ?: return "NO"
         val parsedQuestionNumber = questionNumber.toIntOrNull() ?: return "NO"
 
-        try{
+        try {
             RevealQuestionService().revealQuestion(quiz, parsedQuestionNumber)
-        } catch(e:Exception) {
+        } catch (e: Exception) {
             return "NO"
         }
 
@@ -55,7 +65,7 @@ class MainController(
 
     @GetMapping("/stage")
     fun stage(@RequestParam(value = "quizId") quizId: String): String {
-        val quiz = getQuizById(quizId)?:return "NO"
+        val quiz = getQuizById(quizId) ?: return "NO"
 
         val response = StatusService().getStatus(quiz)
 
@@ -73,12 +83,12 @@ class MainController(
         val parsedBody = Klaxon()
                 .parse<SubmissionBody>(body) ?: return "NO"
 
-        println("submitted question for "+ parsedBody.quizId )
+        println("submitted question for " + parsedBody.quizId)
 
         val question = parsedBody.question
 
         val quiz = existingQuizes.firstOrNull { it.id == parsedBody.quizId } ?: return "NO"
-        val player: Player = quiz.players.firstOrNull {it.name ==question.submittedBy} ?: return "NO"
+        val player: Player = quiz.players.firstOrNull { it.name == question.submittedBy } ?: return "NO"
 
         player.hasSubmittedQuestion = true
         quiz.questions.add(question)
@@ -95,7 +105,7 @@ class MainController(
 
     @GetMapping("/correctAnswer")
     fun revealAnswer(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String, @RequestParam(value = "playerName") playerName: String): String {
-        println("getting correct answer: quizId: " + quizId + " questionNumber: "+ questionNumber + " playerName: " + playerName)
+        println("getting correct answer: quizId: " + quizId + " questionNumber: " + questionNumber + " playerName: " + playerName)
 
         val quiz = getQuizById(quizId) ?: return "NO"
         val parsedQuestionNumber = questionNumber.toIntOrNull() ?: return "NO"
@@ -104,7 +114,7 @@ class MainController(
         val correctAnswerText = question.answers[question.correctAnswerId]
 
         val player: Player = quiz.players.firstOrNull { it.name == playerName } ?: return "NO - player has not joined this quiz"
-        if (player.answers.count() <= parsedQuestionNumber ) return "NO - question not yet answered by player"
+        if (player.answers.count() <= parsedQuestionNumber) return "NO - question not yet answered by player"
         val playerAnswerId = player.answers[parsedQuestionNumber]
         val yourAnswer = question.answers[playerAnswerId]
         val response = RevealAnswerResponse(correctAnswerText, yourAnswer)
@@ -114,8 +124,8 @@ class MainController(
 
     @GetMapping("/currentQuestion")
     fun currentQuestion(@RequestParam(value = "quizId") quizId: String): String {
-        println("currentQuestion for "+ quizId )
-        val quiz = existingQuizes.firstOrNull{ it.id == quizId } ?: return "NO"
+        println("currentQuestion for " + quizId)
+        val quiz = existingQuizes.firstOrNull { it.id == quizId } ?: return "NO"
         val question = quiz.questions.firstOrNull() ?: return "NO"
 
         //val question = Question("sample", "someone", listOf("option 1", "option 2", "option 3", "option 4") ,0 )
@@ -132,11 +142,11 @@ class MainController(
 
         if (!waiting) {
             players = listParticipantsService.listDoneParticipants(quiz.players, quiz)
-        }else {
+        } else {
             players = listParticipantsService.listPendingParticipants(quiz.players, quiz)
         }
 
-        return players.map{it.name}.toString()
+        return players.map { it.name }.toString()
 
 
     }
@@ -144,7 +154,7 @@ class MainController(
     //var participants = hashMapOf<String, MutableList<Player>>()
 
     @GetMapping("/join")
-    fun join(@RequestParam(value = "quizId") quizId: String,  @RequestParam(value = "name") name: String): String {
+    fun join(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "name") name: String): String {
         val quiz = getQuizById(quizId) ?: return "NO"
 
         quiz.players.add(Player(name))
@@ -152,7 +162,7 @@ class MainController(
 
     }
 
-    fun getQuizById(id: String): Quiz?{
+    fun getQuizById(id: String): Quiz? {
         return existingQuizes.firstOrNull { it.id == id }
     }
 
@@ -165,8 +175,8 @@ class MainController(
     }
 
     private fun quizExists(quizId: String): Boolean {
-       return existingQuizes.any {
-           it.id == quizId
-       }
+        return existingQuizes.any {
+            it.id == quizId
+        }
     }
 }

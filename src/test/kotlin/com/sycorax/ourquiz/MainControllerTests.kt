@@ -156,6 +156,36 @@ class MainControllerTests {
     }
 
     @Test
+    fun `next question -- progresses the quiz to the next question`() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        val quiz = Quiz(quizId,
+                hasStarted = true,
+                currentQuestion = 0,
+                questions = mutableListOf(Question("q1", "p1"), Question("q2", "p2")))
+        controller.existingQuizes.add(quiz)
+
+        controller.nextQuestion(quizId, "0")
+
+        Assertions.assertEquals(1, quiz.currentQuestion)
+    }
+
+    @Test
+    fun `next question -- if current question is incorrect -- says no and does not update `() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        val quiz = Quiz(quizId,
+                hasStarted = true,
+                currentQuestion = 0,
+                questions = mutableListOf(Question("q1", "p1"), Question("q2", "p2")))
+        controller.existingQuizes.add(quiz)
+
+        val response = controller.nextQuestion(quizId, "7")
+        Assertions.assertEquals("NO - current question does not match", response)
+        Assertions.assertEquals(0, quiz.currentQuestion)
+    }
+
+    @Test
     fun `stage - afterTheQuizHasBeenStarted`() {
         val controller = MainController()
         val quizId = "a-quiz"
