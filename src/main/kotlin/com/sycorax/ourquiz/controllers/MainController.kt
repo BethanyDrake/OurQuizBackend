@@ -104,19 +104,26 @@ class MainController(
     }
 
     @GetMapping("/correctAnswer")
-    fun revealAnswer(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String, @RequestParam(value = "playerName") playerName: String): String {
+    fun revealAnswer(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "questionNumber") questionNumber: String, @RequestParam(value = "playerName") playerName: String, @RequestParam(value = "isHost") isHost: String = "false"): String {
         println("getting correct answer: quizId: " + quizId + " questionNumber: " + questionNumber + " playerName: " + playerName)
 
         val quiz = getQuizById(quizId) ?: return "NO"
         val parsedQuestionNumber = questionNumber.toIntOrNull() ?: return "NO"
+        val parsedIsHost: Boolean = isHost.toBoolean()
+
         val question = quiz.questions[parsedQuestionNumber]
 
         val correctAnswerText = question.answers[question.correctAnswerId]
 
-        val player: Player = quiz.players.firstOrNull { it.name == playerName } ?: return "NO - player has not joined this quiz"
-        if (player.answers.count() <= parsedQuestionNumber) return "NO - question not yet answered by player"
-        val playerAnswerId = player.answers[parsedQuestionNumber]
-        val yourAnswer = question.answers[playerAnswerId]
+        val yourAnswer = if (parsedIsHost) {
+            ""
+        } else {
+            val player: Player = quiz.players.firstOrNull { it.name == playerName } ?: return "NO - player has not joined this quiz"
+            if (player.answers.count() <= parsedQuestionNumber) return "NO - question not yet answered by player"
+            val playerAnswerId = player.answers[parsedQuestionNumber]
+            question.answers[playerAnswerId]
+        }
+
         val response = RevealAnswerResponse(correctAnswerText, yourAnswer)
 
         return Klaxon().toJsonString(response)

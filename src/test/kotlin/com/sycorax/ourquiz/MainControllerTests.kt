@@ -300,6 +300,30 @@ class MainControllerTests {
     }
 
     @Test
+    fun `reveal answer --as host -- get just the correct answer text for that question`(){
+        val controller = MainController()
+        val quizId = "a-quiz"
+
+        createQuizWithPlayers(controller, quizId, listOf("p1"))
+        submitQuestion(controller, quizId, Question("Question text?", "p1",listOf("MY PICK", "no", "CORRECT ANSWER", "no"), 2 ))
+        controller.start(quizId)
+
+        val submitAnswerBody = SubmitAnswerBody(quizId, "p1", 0, 0)
+        controller.submitAnswer(Klaxon().toJsonString(submitAnswerBody))
+
+        val result = controller.revealAnswer(quizId, "0", "null", "true")
+
+        try {
+            val parsedResult = Klaxon().parse<RevealAnswerResponse>(result);
+            assertEquals("CORRECT ANSWER", parsedResult?.answerText)
+            assertEquals("", parsedResult?.yourAnswer)
+        } catch(e:Exception) {
+            kotlin.test.fail(result)
+        }
+
+    }
+
+    @Test
     fun `submitAnswer -- delegates`() {
         //delegates to SubmitAnswer with the quiz, its participants, and the parsed submission body
 
