@@ -100,7 +100,7 @@ class MainControllerTests {
     }
 
     fun submitQuestion(controller: MainController, quizId:String, playerName:String): String{
-        return submitQuestion(controller, quizId, Question("", playerName))
+        return submitQuestion(controller, quizId, Question("", playerName, answers = listOf("a", "b", "c", "d")))
     }
 
     fun submitQuestion(controller: MainController, quizId:String, question:Question): String{
@@ -162,10 +162,11 @@ class MainControllerTests {
         val quiz = Quiz(quizId,
                 hasStarted = true,
                 currentQuestion = 0,
-                questions = mutableListOf(Question("q1", "p1"), Question("q2", "p2")))
+                questions = mutableListOf(Question("q1", "p1", revealed = true), Question("q2", "p2")))
         controller.existingQuizes.add(quiz)
 
-        controller.nextQuestion(quizId, "0")
+        val response = controller.nextQuestion(quizId, "0")
+        Assertions.assertEquals("OK", response)
 
         Assertions.assertEquals(1, quiz.currentQuestion)
     }
@@ -208,10 +209,13 @@ class MainControllerTests {
         val quizId = "a-quiz"
 
         createQuizWithPlayers(controller, quizId, listOf("p1"))
-        submitQuestion(controller, quizId, "p1")
+        val responses = mutableListOf<String>()
 
-        controller.start(quizId)
-        controller.revealQuestion(quizId, "0")
+        responses.add(submitQuestion(controller, quizId, "p1"))
+
+        responses.add(controller.start(quizId))
+        responses.add(controller.revealQuestion(quizId, "0"))
+        responses.forEach { Assertions.assertEquals("OK", it)}
 
         val expectedStatus = StatusResponse(0, true)
         val response = controller.stage(quizId)
@@ -226,7 +230,7 @@ class MainControllerTests {
         val quizId = "a-quiz"
         createQuizWithPlayers(controller, quizId, listOf())
 
-        Assertions.assertEquals("NO", controller.currentQuestion(quizId) )
+        Assertions.assertEquals("NO - quiz has no questions", controller.currentQuestion(quizId, "0") )
     }
 
     @Test
@@ -234,13 +238,22 @@ class MainControllerTests {
         val controller = MainController()
         val quizId = "a-quiz"
         val player = "player1"
+        val responses = mutableListOf<String>()
         createQuizWithPlayers(controller, quizId, listOf(player))
         val questionText = "Is this question 1?"
         val answers = listOf("Option 1", "Option 2", "Option 3", "Option 4")
         val correctQuestionId = 2
         val question = Question(questionText, player, answers, correctQuestionId)
-        submitQuestion(controller, quizId, question)
-        val result = Klaxon().parse<Question>(controller.currentQuestion(quizId))
+        responses.add(submitQuestion(controller, quizId, question))
+        responses.add(controller.start(quizId))
+        responses.forEach { Assertions.assertEquals("OK", it)}
+
+        val rawResponse = controller.currentQuestion(quizId, "0")
+        val result = try {
+            Klaxon().parse<Question>(rawResponse)
+        } catch (e: Exception) {
+            rawResponse
+        }
         Assertions.assertEquals(question, result)
     }
 
