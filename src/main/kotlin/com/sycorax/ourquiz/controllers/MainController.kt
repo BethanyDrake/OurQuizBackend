@@ -206,6 +206,17 @@ class MainController(
         return submitAnswerService.submitAnswer(quiz, parsedBody.questionNumber, parsedBody.answerId, parsedBody.playerName)
     }
 
+    @GetMapping("/quizResults")
+    fun getQuizResults(@RequestParam quizId: String): String {
+
+        val quiz = getQuizById(quizId) ?: return logErrorAndReturn("getQuizResults", "NO - Quiz not found")
+        try {
+            return Klaxon().toJsonString(ResultsService().getResults(quiz))
+        }catch(e:Exception) {
+            return logErrorAndReturn("getQuizResults", "No - "+ e.message)
+        }
+    }
+
     private fun quizExists(quizId: String): Boolean {
         return existingQuizes.any {
             it.id == quizId

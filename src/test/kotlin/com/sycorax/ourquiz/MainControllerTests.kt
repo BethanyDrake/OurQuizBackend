@@ -171,6 +171,7 @@ class MainControllerTests {
         Assertions.assertEquals(1, quiz.currentQuestion)
     }
 
+
     @Test
     fun `next question -- if current question is incorrect -- says no and does not update `() {
         val controller = MainController()
@@ -333,6 +334,32 @@ class MainControllerTests {
         } catch(e:Exception) {
             kotlin.test.fail(result)
         }
+
+    }
+
+    @Test
+    fun `reveal question --sets all playes who have not answered as -1`() {
+        val controller = MainController()
+
+        val quizId = "quiz-id"
+        val quiz = Quiz(
+                quizId,
+                hasStarted = true,
+                currentQuestion = 1,
+                questions =  mutableListOf(
+                        Question("q1", "", answers = listOf("a", "b", "c", "d"), correctAnswerId = 1),
+                        Question("q2", "", listOf("a", "b", "c", "d"), correctAnswerId = 2)
+                ),
+                players = mutableListOf(
+                    Player("player-that-has-not-answered", answers = mutableListOf(1)),
+                    Player("player-that-has-answered", answers = mutableListOf(1, 2))
+        )
+        )
+
+        controller.existingQuizes.add(quiz)
+
+        controller.revealQuestion(quizId, "1")
+        quiz.players.forEach { assertEquals(2, it.answers.size )}
 
     }
 

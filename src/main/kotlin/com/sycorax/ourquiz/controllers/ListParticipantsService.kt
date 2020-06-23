@@ -19,6 +19,4 @@ class ListParticipantsService {
         return players.filter{it.lastAnsweredQuestion < quiz.currentQuestion}
 
     }
-
-
 }
