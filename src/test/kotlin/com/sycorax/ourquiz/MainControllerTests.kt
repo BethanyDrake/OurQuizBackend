@@ -33,6 +33,17 @@ class MainControllerTests {
         Assertions.assertEquals("OK", result)
 	}
 
+
+    @Test
+    fun `joining with an identical name does not re-add`() {
+        val controller = MainController()
+        val result1 = controller.join("existing-quiz-id", "p1")
+        val result2 = controller.join("existing-quiz-id", "p1")
+        Assertions.assertEquals("OK", result1)
+        Assertions.assertEquals("OK - already joined", result2)
+        Assertions.assertEquals(1, controller.existingQuizes[0].players.size)
+    }
+
     @Test
     fun createReturnsOkIfQuizDoesNotExist() {
         var controller = MainController()

@@ -189,6 +189,7 @@ class MainController(
     fun join(@RequestParam(value = "quizId") quizId: String, @RequestParam(value = "name") name: String): String {
         val quiz = getQuizById(quizId) ?: return logErrorAndReturn("join", "NO")
 
+        if (quiz.players.any { it.name == name }) return "OK - already joined"
         quiz.players.add(Player(name))
         return "OK"
 
