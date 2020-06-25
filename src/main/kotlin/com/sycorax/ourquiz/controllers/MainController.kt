@@ -41,6 +41,9 @@ class MainController(
     @PutMapping("/start")
     fun start(@RequestParam(value = "quizId") quizId: String): String {
         val quiz = getQuizById(quizId) ?: return logErrorAndReturn("start", "NO")
+        if (quiz.questions.size == 0) return logErrorAndReturn("start", "NO - not enough questions")
+        if (quiz.hasStarted) return "OK - already started"
+
         quiz.currentQuestion = 0
         quiz.hasStarted = true
         return "OK"

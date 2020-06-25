@@ -167,6 +167,52 @@ class MainControllerTests {
     }
 
     @Test
+    fun `start - says NO if quiz doesnt have enough questions`() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+
+        val quiz = Quiz(quizId, questions = mutableListOf())
+        controller.existingQuizes.add(quiz)
+
+        val response = controller.start(quizId)
+
+        Assertions.assertEquals("NO - not enough questions", response)
+    }
+
+    @Test
+    fun `start - says OK if quiz has at least 1 question, sets hasStarted to true and current question to 0`() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        val quiz = Quiz(quizId, questions = mutableListOf(Question("q1", "p1")))
+        controller.existingQuizes.add(quiz)
+
+        val response = controller.start(quizId)
+
+        Assertions.assertEquals("OK", response)
+        Assertions.assertEquals(true, quiz.hasStarted)
+
+        Assertions.assertEquals(0, quiz.currentQuestion)
+    }
+
+    @Test
+    fun `start - says OK if quiz is already started, but doesnt do anything`() {
+        val controller = MainController()
+        val quizId = "a-quiz"
+        val quiz = Quiz(
+                quizId,
+                hasStarted = true,
+                currentQuestion = 3,
+                questions = mutableListOf(Question("q1", "p1")))
+        controller.existingQuizes.add(quiz)
+
+        val response = controller.start(quizId)
+
+        Assertions.assertEquals("OK - already started", response)
+        Assertions.assertEquals(true, quiz.hasStarted)
+        Assertions.assertEquals(3, quiz.currentQuestion)
+    }
+
+    @Test
     fun `next question -- progresses the quiz to the next question`() {
         val controller = MainController()
         val quizId = "a-quiz"
